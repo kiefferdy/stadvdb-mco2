@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Clinics{% endblock %}
+
+{% block content %}
+    <h1>Clinics</h1>
+    <hr>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Hospital</th>
+                <th>City</th>
+                <th>Province</th>
+                <th>Region</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for clinic in clinics %}
+            <tr>
+                <td>{{ clinic.id }}</td>
+                <td>{{ clinic.hospital }}</td>
+                <td>{{ clinic.city }}</td>
+                <td>{{ clinic.province }}</td>
+                <td>{{ clinic.region }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
