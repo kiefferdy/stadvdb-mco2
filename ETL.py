@@ -15,30 +15,30 @@ def create_seriousmd_schema():
         connection.execute(text("CREATE DATABASE IF NOT EXISTS seriousmd"))
         connection.execute(text("USE seriousmd"))
         connection.execute(text("""
-            CREATE TABLE IF NOT EXISTS seriousmd (
-                pxid VARCHAR(255),
-                clinicid VARCHAR(255),
-                doctorid VARCHAR(255),
-                apptid VARCHAR(255),
-                status VARCHAR(255),
-                TimeQueued VARCHAR(255),
-                QueueDate VARCHAR(255),
-                StartTime VARCHAR(255),
-                EndTime VARCHAR(255),
-                type VARCHAR(255),
-                px_gender VARCHAR(255),
-                hospitalname VARCHAR(255),
-                City VARCHAR(255),
-                Province VARCHAR(255),
-                RegionName VARCHAR(255),
-                mainspecialty VARCHAR(255),
-                is_virtual BOOLEAN,
-                IsHospital INT,
-                px_age INT,
-                doc_age INT
+            CREATE TABLE IF NOT EXISTS appointments (
+                pxid           VARCHAR(32),
+                clinicid       VARCHAR(32),
+                doctorid       VARCHAR(32),
+                apptid         VARCHAR(32) NOT NULL UNIQUE,
+                status         ENUM('Cancel', 'Complete', 'NoShow', 'Queued', 'Serving', 'Skip') NOT NULL,
+                TimeQueued     DATETIME,
+                QueueDate      DATETIME,
+                StartTime      DATETIME,
+                EndTime        DATETIME,
+                type           ENUM('Consultation', 'Inpatient') NOT NULL,
+                `Virtual`      BOOLEAN,
+                hospitalname   TEXT,
+                IsHospital     BOOLEAN,
+                City           TEXT,
+                Province       TEXT,
+                RegionName     TEXT,
+                mainspecialty  TEXT,
+                patient_age    INT UNSIGNED,
+                doctor_age     INT UNSIGNED,
+                patient_gender      ENUM('MALE', 'FEMALE'),
+                PRIMARY KEY (apptid)
             )
         """))
-        
         
 # Create seriousmd Schemas
 
@@ -56,9 +56,9 @@ print(f"Loaded seriousMD.csv into DataFrame in {time.time() - start_time:.2f} se
 
 start_time = time.time()
 
-# Insert DataFrame into seriousmd table
-df.to_sql('seriousmd', con=engine, schema='seriousmd', if_exists='append', index=False)
-print(f"Inserted DataFrame into seriousmd table in {time.time() - start_time:.2f} seconds")
+# Insert DataFrame into appointments table
+df.to_sql('appointments', con=engine, schema='seriousmd', if_exists='append', index=False)
+print(f"Inserted DataFrame into appointments table in {time.time() - start_time:.2f} seconds")
 
 # Close the database connection
-engine.dispose()    
+engine.dispose()
