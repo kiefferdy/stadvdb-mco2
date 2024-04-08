@@ -40,24 +40,27 @@
             </tr>
         </thead>
         <tbody>
-            {% for appointment in appointments %}
-                {% if not search_query or search_query.lower() in appointment.doctor.name.lower() or search_query.lower() in appointment.patient.name.lower() %}
+            {% for _,appointment in appointments.iterrows() %}
+                {# {% if not search_query or search_query.lower() in appointment.doctor.name.lower() or search_query.lower() in appointment.patient.name.lower() %} #}
                     <tr>
-                        <td>{{ appointment.id }}</td>
-                        <td>{{ appointment.doctor.name }}</td>
-                        <td>{{ appointment.patient.id }}</td>
-                        <td>{{ appointment.clinic.id }}</td>
+                        <td>{{ appointment.apptid }}</td>
+                        {# <td>{{ appointment.doctor.name }}</td> #}
+                        <td>{{ appointment.doctorid }}</td>
+                        {# <td>{{ appointment.patient.id }}</td> #}
+                        <td>{{ appointment.pxid }}</td>
+                        {# <td>{{ appointment.clinic.id }}</td> #}
+                        <td>{{ appointment.clinicid }}</td>
                         <td>{{ appointment.status }}</td>
-                        <td>{{ appointment.start_time }}</td>
-                        <td>{{ appointment.end_time }}</td>
+                        <td>{{ appointment.StartTime }}</td>
+                        <td>{{ appointment.EndTime }}</td>
                         <td>{{ appointment.type }}</td>
-                        <td>{{ 'Yes' if appointment.virtual else 'No' }}</td>
+                        <td>{{ 'Yes' if appointment.is_virtual else 'No' }}</td>
                         <td>
                             <a href="/edit_appointment/{{ appointment.id }}" class="btn btn-sm btn-primary">Edit</a>
                             <a href="/delete_appointment/{{ appointment.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this appointment?')">Delete</a>
                         </td>
                     </tr>
-                {% endif %}
+                {# {% endif %} #}
             {% endfor %}
         </tbody>
     </table>
