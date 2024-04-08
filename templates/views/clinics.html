@@ -1,30 +1,47 @@
-{% extends 'base.html' %} {% block title %}Clinics{% endblock %} {% block
-content %}
+{% extends 'base.html' %}
+
+{% block title %}Clinics{% endblock %}
+
+{% block content %}
+
 <h1>Clinics</h1>
 <hr />
+<form action="/clinics" method="GET">
+    <div class="form-group d-flex align-items-center mb-3">
+        <label for="max_results" class="mr-2">Max number of results:</label>
+        <select class="form-control w-auto" id="max_results" name="max_results" onchange="this.form.submit()">
+            <option value="25" {% if max_results == 25 %}selected{% endif %}>25</option>
+            <option value="50" {% if max_results == 50 %}selected{% endif %}>50</option>
+            <option value="100" {% if max_results == 100 %}selected{% endif %}>100</option>
+            <option value="200" {% if max_results == 200 %}selected{% endif %}>200</option>
+            <option value="500" {% if max_results == 500 %}selected{% endif %}>500</option>
+        </select>
+        <input type="hidden" name="search" value="{{ search_query }}">
+    </div>
+</form>
 <table class="table table-striped">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>ID</th>
-      <th>Hospital</th>
-      <th>City</th>
-      <th>Province</th>
-      <th>Region</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for _, clinic in clinics.iterrows() %}
-    <tr>
-      <td>{{ loop.index }}</td>
-      <td>{{ clinic.clinicid }}</td>
-      <td>{{ clinic.hospitalname }}</td>
-      <td>{{ clinic.IsHospital }}</td>
-      <td>{{ clinic.City }}</td>
-      <td>{{ clinic.Province }}</td>
-      <td>{{ clinic.RegionName }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>ID</th>
+            <th>Hospital</th>
+            <th>City</th>
+            <th>Province</th>
+            <th>Region</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for _, clinic in clinics.iterrows() %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ clinic.clinicid }}</td>
+            <td>{{ clinic.hospitalname }}</td>
+            <td>{{ clinic.City }}</td>
+            <td>{{ clinic.Province }}</td>
+            <td>{{ clinic.RegionName }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
 </table>
+
 {% endblock %}

@@ -1,154 +1,169 @@
-{% extends 'base.html' %} {% block title %}Appointments{% endblock %} {% block
-content %}
+{% extends 'base.html' %}
+
+{% block title %}Appointments{% endblock %} 
+
+{% block content %}
+
 <h1>Appointments</h1>
 <hr />
 <div class="row">
-  <div class="col-md-6">
-    <h2>Search Appointments</h2>
-    <form action="/appointments" method="GET">
-      <div class="form-group">
-        <label for="search">Search:</label>
-        <div class="input-group">
-          <input
-            type="text"
-            class="form-control"
-            id="search"
-            name="search"
-            placeholder="Enter doctor or patient name"
-            value="{{ search_query }}"
-          />
-          <div class="input-group-append">
-            <button type="submit" class="btn btn-primary">Search</button>
-            <a href="/appointments" class="btn btn-secondary">Clear</a>
-          </div>
-        </div>
-      </div>
-    </form>
-  </div>
+    <div class="col-md-6">
+        <h2>Search Appointments</h2>
+        <form action="/appointments" method="GET">
+            <div class="form-group">
+                <div class="input-group">
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="search"
+                        name="search"
+                        placeholder="Enter a doctor, patient, or appointment ID"
+                        value="{{ search_query }}"
+                        />
+                    <div class="input-group-append">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                        <a href="/appointments" class="btn btn-secondary">Clear</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 <hr />
 <h2>Upcoming Appointments</h2>
-<!-- Add a div wrapper with a class for styling -->
+<form action="/appointments" method="GET">
+    <div class="form-group d-flex align-items-center mb-3">
+        <label for="max_results" class="mr-2">Max number of results:</label>
+        <select class="form-control w-auto" id="max_results" name="max_results" onchange="this.form.submit()">
+            <option value="25" {% if max_results == 25 %}selected{% endif %}>25</option>
+            <option value="50" {% if max_results == 50 %}selected{% endif %}>50</option>
+            <option value="100" {% if max_results == 100 %}selected{% endif %}>100</option>
+            <option value="200" {% if max_results == 200 %}selected{% endif %}>200</option>
+            <option value="500" {% if max_results == 500 %}selected{% endif %}>500</option>
+        </select>
+        <input type="hidden" name="search" value="{{ search_query }}">
+    </div>
+</form>
+<!-- Scrollable container -->
 <div class="appointments-container">
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>ID</th>
-        <th>Doctor</th>
-        <th>Patient ID</th>
-        <th>Clinic ID</th>
-        <th>Status</th>
-        <th>Start Time</th>
-        <th>End Time</th>
-        <th>Type</th>
-        <th>Virtual</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for _,appointment in appointments.iterrows() %} {% if search_query ==
-      "" or search_query.upper() in appointment.doctorid or search_query.upper()
-      in appointment.pxid %}
-      <tr>
-        <td>{{ loop.index }}</td>
-        <td>{{ appointment.apptid }}</td>
-        <td>{{ appointment.doctorid }}</td>
-        <td>{{ appointment.pxid }}</td>
-        <td>{{ appointment.clinicid }}</td>
-        <td>{{ appointment.status }}</td>
-        <td>{{ appointment.StartTime }}</td>
-        <td>{{ appointment.EndTime }}</td>
-        <td>{{ appointment.type }}</td>
-        <td>{{ 'Yes' if appointment.is_virtual else 'No' }}</td>
-        <td>
-          <a
-            href="/edit_appointment/{{ appointment.id }}"
-            class="btn btn-sm btn-primary"
-            >Edit</a
-          >
-          <a
-            href="/delete_appointment/{{ appointment.id }}"
-            class="btn btn-sm btn-danger"
-            onclick="return confirm('Are you sure you want to delete this appointment?')"
-            >Delete</a
-          >
-        </td>
-      </tr>
-      {% endif %} {% endfor %}
-    </tbody>
-  </table>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>ID</th>
+                <th>Doctor ID</th>
+                <th>Patient ID</th>
+                <th>Clinic ID</th>
+                <th>Status</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Type</th>
+                <th>Virtual</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for _, appointment in appointments.iterrows() %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ appointment.apptid }}</td>
+                <td>{{ appointment.doctorid }}</td>
+                <td>{{ appointment.pxid }}</td>
+                <td>{{ appointment.clinicid }}</td>
+                <td>{{ appointment.status }}</td>
+                <td>{{ appointment.StartTime }}</td>
+                <td>{{ appointment.EndTime }}</td>
+                <td>{{ appointment.type }}</td>
+                <td>{{ 'Yes' if appointment.Virtual else 'No' }}</td>
+                <td>
+                    <a
+                        href="/edit_appointment/{{ appointment.id }}"
+                        class="btn btn-sm btn-primary"
+                        >Edit</a
+                        >
+                    <a
+                        href="/delete_appointment/{{ appointment.id }}"
+                        class="btn btn-sm btn-danger"
+                        onclick="return confirm('Are you sure you want to delete this appointment?')"
+                        >Delete</a
+                        >
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 <!-- End of scrollable container -->
 <hr />
 <h2>Add Appointment</h2>
 <form action="/add_appointment" method="POST">
-  <div class="form-group">
-    <label for="doctor">Doctor:</label>
-    <select class="form-control" id="doctor" name="doctor" required>
-      <option value="">Select Doctor</option>
-      {% for _, doctor in doctors.iterrows() %}
-      <option value="{{ doctor.doctorid }}">{{ doctor.doctorid }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="form-group">
-    <label for="patient">Patient:</label>
-    <select class="form-control" id="patient" name="patient" required>
-      <option value="">Select Patient</option>
-      {% for _, patient in patients.iterrows() %}
-      <option value="{{ patient.pxid }}">{{ patient.pxid }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="form-group">
-    <label for="hospital">Clinic:</label>
-    <select class="form-control" id="clinic" name="clinic" required>
-      <option value="">Select Clinic</option>
-      {% for _, clinic in clinics.iterrows() %}
-      <option value="{{ clinic.clinicid }}">{{ clinic.clinicid }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="form-group">
-    <label for="start_time">Start Time:</label>
-    <input
-      type="datetime-local"
-      class="form-control"
-      id="start_time"
-      name="start_time"
-      required
-    />
-  </div>
-  <div class="form-group">
-    <label for="end_time">End Time:</label>
-    <input
-      type="datetime-local"
-      class="form-control"
-      id="end_time"
-      name="end_time"
-      required
-    />
-  </div>
-  <div class="form-group">
-    <label for="type">Type:</label>
-    <select class="form-control" id="type" name="type" required>
-      <option value="">Select Type</option>
-      <option value="Consultation">Consultation</option>
-      <option value="Follow-up">Inpatient</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <div class="form-check">
-      <input
-        type="checkbox"
-        class="form-check-input"
-        id="virtual"
-        name="virtual"
-      />
-      <label class="form-check-label" for="virtual">Virtual</label>
+    <div class="form-group">
+        <label for="doctor">Doctor:</label>
+        <select class="form-control" id="doctor" name="doctor" required>
+            <option value="">Select Doctor ID</option>
+            {% for _, doctor in doctors.iterrows() %}
+            <option value="{{ doctor.doctorid }}">{{ doctor.doctorid }}</option>
+            {% endfor %}
+        </select>
     </div>
-  </div>
-  <button type="submit" class="btn btn-primary">Add Appointment</button>
+    <div class="form-group">
+        <label for="patient">Patient:</label>
+        <select class="form-control" id="patient" name="patient" required>
+            <option value="">Select Patient ID</option>
+            {% for _, patient in patients.iterrows() %}
+            <option value="{{ patient.pxid }}">{{ patient.pxid }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="hospital">Clinic:</label>
+        <select class="form-control" id="clinic" name="clinic" required>
+            <option value="">Select Clinic ID</option>
+            {% for _, clinic in clinics.iterrows() %}
+            <option value="{{ clinic.clinicid }}">{{ clinic.clinicid }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="start_time">Start Time:</label>
+        <input
+            type="datetime-local"
+            class="form-control"
+            id="start_time"
+            name="start_time"
+            required
+            />
+    </div>
+    <div class="form-group">
+        <label for="end_time">End Time:</label>
+        <input
+            type="datetime-local"
+            class="form-control"
+            id="end_time"
+            name="end_time"
+            required
+            />
+    </div>
+    <div class="form-group">
+        <label for="type">Type:</label>
+        <select class="form-control" id="type" name="type" required>
+            <option value="">Select Type</option>
+            <option value="Consultation">Consultation</option>
+            <option value="Follow-up">Inpatient</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <div class="form-check">
+            <input
+                type="checkbox"
+                class="form-check-input"
+                id="virtual"
+                name="virtual"
+                />
+            <label class="form-check-label" for="virtual">Virtual</label>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Add Appointment</button>
 </form>
+
 {% endblock %}

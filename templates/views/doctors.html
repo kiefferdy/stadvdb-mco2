@@ -1,25 +1,43 @@
-{% extends 'base.html' %} {% block title %}Doctors{% endblock %} {% block
-content %}
+{% extends 'base.html' %}
+
+{% block title %}Doctors{% endblock %}
+
+{% block content %}
+
 <h1>Doctors</h1>
 <hr />
+<form action="/doctors" method="GET">
+    <div class="form-group d-flex align-items-center mb-3">
+        <label for="max_results" class="mr-2">Max number of results:</label>
+        <select class="form-control w-auto" id="max_results" name="max_results" onchange="this.form.submit()">
+            <option value="25" {% if max_results == 25 %}selected{% endif %}>25</option>
+            <option value="50" {% if max_results == 50 %}selected{% endif %}>50</option>
+            <option value="100" {% if max_results == 100 %}selected{% endif %}>100</option>
+            <option value="200" {% if max_results == 200 %}selected{% endif %}>200</option>
+            <option value="500" {% if max_results == 500 %}selected{% endif %}>500</option>
+        </select>
+        <input type="hidden" name="search" value="{{ search_query }}">
+    </div>
+</form>
 <table class="table table-striped">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>ID</th>
-      <th>Specialty</th>
-      <th>Age</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for _, doctor in doctors.iterrows() %}
-    <tr>
-      <td>{{ loop.index }}</td>
-      <td>{{ doctor.doctorid }}</td>
-      <td>{{ doctor.mainspecialty }}</td>
-      <td>{{ doctor.doctor_age }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>ID</th>
+            <th>Specialty</th>
+            <th>Age</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for _, doctor in doctors.iterrows() %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ doctor.doctorid }}</td>
+            <td>{{ doctor.mainspecialty }}</td>
+            <td>{{ doctor.doctor_age }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
 </table>
+
 {% endblock %}

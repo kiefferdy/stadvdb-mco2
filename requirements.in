@@ -1,5 +1,5 @@
 pip-tools
 Flask
 sqlalchemy
-mysqlclient # MySQL driver
+mysqlclient
 pandas

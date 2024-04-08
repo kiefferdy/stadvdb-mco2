@@ -41,14 +41,26 @@ body {
 }
 
 .appointments-container {
-    max-height: 400px; /* Adjust the height as needed */
+    max-height: 800px;
     overflow-y: scroll;
 }
 
-/* Make table header sticky */
 .appointments-container th {
     position: sticky;
     top: 0;
-    background-color: #fff; /* Ensure the background is solid */
-    z-index: 1; /* Ensure the header is above the content if needed */
+    background-color: #fff;
+    z-index: 1;
+}
+
+.form-group.d-flex {
+    display: flex;
+    align-items: center;
+}
+
+.form-group label {
+    margin-right: 10px;
+}
+
+.form-control.w-auto {
+    width: auto;
 }

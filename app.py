@@ -3,14 +3,17 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session
 import pandas as pd
 
-# MySQL connection credentials
+# MySQL Connection Credentials
 USERNAME = "root"
 PASSWORD = "tCTDrUyJna2S4KRYN3bHqcmp"
 
-# MySQL parameters
+# MySQL Database Parameters
 SCHEMA = "seriousmd"
 TABLE = "appointments"
-PORT = 20171
+PORT = 20171 # Can be 20171, 20172, or 20173
+
+# MySQL Database Engine
+engine = sa.create_engine(f"mysql+mysqldb://{USERNAME}:{PASSWORD}@ccscloud.dlsu.edu.ph:{PORT}/")
 
 app = Flask(__name__)
 
@@ -20,12 +23,15 @@ def home():
 
 @app.route('/appointments')
 def appointments():
-    search = request.args.get('search')
+    search = request.args.get('search', default='')
+    max_results = request.args.get('max_results', default=25, type=int)
 
-    engine = sa.create_engine(f"mysql+mysqldb://{USERNAME}:{PASSWORD}@ccscloud.dlsu.edu.ph:{PORT}/",
-                              isolation_level="READ COMMITTED")
+    if search == '' or search is None:
+        stmt_appointments = sa.text(f"SELECT *\nFROM {SCHEMA}.{TABLE}\nLIMIT {max_results}")
+    else:
+        stmt_appointments = sa.text(f"SELECT *\nFROM {SCHEMA}.{TABLE}\nWHERE pxid = '{search}' OR doctorid = '{search}' OR apptid = '{search}'\nLIMIT {max_results}")
 
-    stmt_appointments = sa.text(f"SELECT *\nFROM {SCHEMA}.{TABLE}\nWHERE pxid = '{search}' OR doctorid = '{search}'")
+
     df_appointments = None
     session = Session(engine)
     with session.begin():
@@ -48,7 +54,8 @@ def appointments():
     engine.dispose()
 
     return render_template('views/appointments.html', 
-                           search_query=search if search else "", 
+                           search_query=search if search else "",
+                           max_results=max_results,
                            appointments=df_appointments,
                            doctors=df_doctors,
                            patients=df_patients,
@@ -57,16 +64,12 @@ def appointments():
 @app.route('/doctors')
 def doctors():
     search = request.args.get('search')
+    max_results = request.args.get('max_results', default=25, type=int)
 
-    engine = sa.create_engine(f"mysql+mysqldb://{USERNAME}:{PASSWORD}@ccscloud.dlsu.edu.ph:{PORT}/",
-                              isolation_level="READ COMMITTED")
-
-    stmt = sa.text(f"SELECT DISTINCT doctorid, mainspecialty, doctor_age FROM {SCHEMA}.{TABLE} ORDER BY doctorid;")
+    stmt = sa.text(f"SELECT DISTINCT doctorid, mainspecialty, doctor_age FROM {SCHEMA}.{TABLE} ORDER BY doctorid\nLIMIT {max_results};")
 
     df = None
-
     session = Session(engine)
-
     with session.begin():
         with engine.connect() as conn:
             df = pd.read_sql_query(
@@ -76,24 +79,20 @@ def doctors():
 
     # Close the database connection
     engine.dispose()
-
     return render_template('views/doctors.html',
                            search_query=search if search else "",
+                           max_results=max_results,
                            doctors=df)
 
 @app.route('/patients')
 def patients():
     search = request.args.get('search')
+    max_results = request.args.get('max_results', default=25, type=int)
 
-    engine = sa.create_engine(f"mysql+mysqldb://{USERNAME}:{PASSWORD}@ccscloud.dlsu.edu.ph:{PORT}/",
-                              isolation_level="READ COMMITTED")
-
-    stmt = sa.text(f"SELECT DISTINCT pxid, patient_gender, patient_age FROM {SCHEMA}.{TABLE} ORDER BY pxid;")
+    stmt = sa.text(f"SELECT DISTINCT pxid, patient_gender, patient_age FROM {SCHEMA}.{TABLE} ORDER BY pxid\nLIMIT {max_results};")
 
     df = None
-
     session = Session(engine)
-
     with session.begin():
         with engine.connect() as conn:
             df = pd.read_sql_query(
@@ -105,21 +104,18 @@ def patients():
     engine.dispose()
     return render_template('views/patients.html',
                            search_query=search if search else "",
+                           max_results=max_results,
                            patients=df)
 
 @app.route('/clinics')
 def clinics():
     search = request.args.get('search')
+    max_results = request.args.get('max_results', default=25, type=int)
 
-    engine = sa.create_engine(f"mysql+mysqldb://{USERNAME}:{PASSWORD}@ccscloud.dlsu.edu.ph:{PORT}/",
-                              isolation_level="READ COMMITTED")
-
-    stmt = sa.text(f"SELECT DISTINCT clinicid, hospitalname, IsHospital, City, Province, RegionName FROM {SCHEMA}.{TABLE} ORDER BY clinicid;")
+    stmt = sa.text(f"SELECT DISTINCT clinicid, hospitalname, IsHospital, City, Province, RegionName FROM {SCHEMA}.{TABLE} ORDER BY clinicid\nLIMIT {max_results};")
 
     df = None
-
     session = Session(engine)
-
     with session.begin():
         with engine.connect() as conn:
             df = pd.read_sql_query(
@@ -131,6 +127,7 @@ def clinics():
     engine.dispose()
     return render_template('views/clinics.html',
                            search_query=search if search else "",
+                           max_results=max_results,
                            clinics=df)
 
 @app.route('/concurrency1')
