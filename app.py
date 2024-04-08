@@ -58,5 +58,11 @@ def patients():
 def clinics():
     return render_template('views/clinics.html')
 
+@app.route('/concurrency1')
+def concurrency1():
+    status = request.args.get('status')
+    level = request.args.get('level')
+    return render_template('views/concurrency1.html', status=status, level=level)
+
 if __name__ == '__main__':
     app.run(debug=True)
