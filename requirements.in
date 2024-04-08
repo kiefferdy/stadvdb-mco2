@@ -1,2 +1,5 @@
 pip-tools
 Flask
+sqlalchemy
+mysqlclient # MySQL driver
+pandas
