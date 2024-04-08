@@ -9,7 +9,8 @@ PASSWORD = "tCTDrUyJna2S4KRYN3bHqcmp"
 
 # MySQL parameters
 SCHEMA = "seriousmd"
-TABLE = "seriousmd"
+TABLE = "appointments"
+PORT = 20171
 
 app = Flask(__name__)
 
@@ -19,15 +20,12 @@ def home():
 
 @app.route('/appointments')
 def appointments():
-    search = request.args.get('search') or ""
-    print("\trequest=" + search)
+    search = request.args.get('search')
 
-    engine = sa.create_engine("mysql+mysqldb://"+USERNAME+":"+PASSWORD+"@ccscloud.dlsu.edu.ph:20171/",
+    engine = sa.create_engine(f"mysql+mysqldb://{USERNAME}:{PASSWORD}@ccscloud.dlsu.edu.ph:{PORT}/",
                               isolation_level="READ COMMITTED")
 
-    # Currently selects the top 5 rows of table, TODO: change to search query
-    stmt = sa.select(sa.text(f"*\nFROM {SCHEMA}.{TABLE}")).limit(5)
-    # stmt = sa.select(sa.text(f"*\nFROM {SCHEMA}.{TABLE}")).where(sa.text(f""))
+    stmt = sa.text(f"SELECT *\nFROM {SCHEMA}.{TABLE}\nWHERE pxid = '{search}' OR doctorid = '{search}'")
 
     df = None
 
@@ -44,7 +42,7 @@ def appointments():
     engine.dispose()
 
     return render_template('views/appointments.html',
-                           search_query=search,
+                           search_query=search if search else "",
                            appointments=df
                            )
 

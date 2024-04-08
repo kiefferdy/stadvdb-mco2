@@ -41,14 +41,11 @@
         </thead>
         <tbody>
             {% for _,appointment in appointments.iterrows() %}
-                {# {% if not search_query or search_query.lower() in appointment.doctor.name.lower() or search_query.lower() in appointment.patient.name.lower() %} #}
+                {% if search_query == "" or search_query.upper() in appointment.doctorid or search_query.upper() in appointment.pxid %}
                     <tr>
                         <td>{{ appointment.apptid }}</td>
-                        {# <td>{{ appointment.doctor.name }}</td> #}
                         <td>{{ appointment.doctorid }}</td>
-                        {# <td>{{ appointment.patient.id }}</td> #}
                         <td>{{ appointment.pxid }}</td>
-                        {# <td>{{ appointment.clinic.id }}</td> #}
                         <td>{{ appointment.clinicid }}</td>
                         <td>{{ appointment.status }}</td>
                         <td>{{ appointment.StartTime }}</td>
@@ -60,7 +57,7 @@
                             <a href="/delete_appointment/{{ appointment.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this appointment?')">Delete</a>
                         </td>
                     </tr>
-                {# {% endif %} #}
+                {% endif %}
             {% endfor %}
         </tbody>
     </table>
