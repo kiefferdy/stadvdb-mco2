@@ -87,8 +87,8 @@ content %}
     <label for="doctor">Doctor:</label>
     <select class="form-control" id="doctor" name="doctor" required>
       <option value="">Select Doctor</option>
-      {% for doctor in doctors %}
-      <option value="{{ doctor.id }}">{{ doctor.name }}</option>
+      {% for _, doctor in doctors.iterrows() %}
+      <option value="{{ doctor.doctorid }}">{{ doctor.doctorid }}</option>
       {% endfor %}
     </select>
   </div>
@@ -96,8 +96,8 @@ content %}
     <label for="patient">Patient:</label>
     <select class="form-control" id="patient" name="patient" required>
       <option value="">Select Patient</option>
-      {% for patient in patients %}
-      <option value="{{ patient.id }}">{{ patient.id }}</option>
+      {% for _, patient in patients.iterrows() %}
+      <option value="{{ patient.pxid }}">{{ patient.pxid }}</option>
       {% endfor %}
     </select>
   </div>
@@ -105,8 +105,8 @@ content %}
     <label for="hospital">Clinic:</label>
     <select class="form-control" id="clinic" name="clinic" required>
       <option value="">Select Clinic</option>
-      {% for clinic in clinics %}
-      <option value="{{ clinic.id }}">{{ clinic.id }}</option>
+      {% for _, clinic in clinics.iterrows() %}
+      <option value="{{ clinic.clinicid }}">{{ clinic.clinicid }}</option>
       {% endfor %}
     </select>
   </div>
