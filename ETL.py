@@ -33,8 +33,8 @@ def create_seriousmd_schema():
                 Province       TEXT,
                 RegionName     TEXT,
                 mainspecialty  TEXT,
-                patient_age    INT UNSIGNED,
-                doctor_age     INT UNSIGNED,
+                doctor_age    INT UNSIGNED,
+                patient_age     INT UNSIGNED,
                 patient_gender      ENUM('MALE', 'FEMALE'),
                 PRIMARY KEY (apptid)
             )

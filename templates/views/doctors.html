@@ -1,28 +1,25 @@
-{% extends 'base.html' %}
-
-{% block title %}Doctors{% endblock %}
-
-{% block content %}
-    <h1>Doctors</h1>
-    <hr>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Specialty</th>
-                <th>Age</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for doctor in doctors %}
-            <tr>
-                <td>{{ doctor.id }}</td>
-                <td>{{ doctor.name }}</td>
-                <td>{{ doctor.specialty }}</td>
-                <td>{{ doctor.age }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+{% extends 'base.html' %} {% block title %}Doctors{% endblock %} {% block
+content %}
+<h1>Doctors</h1>
+<hr />
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>ID</th>
+      <th>Specialty</th>
+      <th>Age</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for _, doctor in doctors.iterrows() %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ doctor.doctorid }}</td>
+      <td>{{ doctor.mainspecialty }}</td>
+      <td>{{ doctor.doctor_age }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

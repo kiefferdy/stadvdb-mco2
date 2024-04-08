@@ -39,3 +39,16 @@ body {
     background-color: #c82333;
     border-color: #bd2130;
 }
+
+.appointments-container {
+    max-height: 400px; /* Adjust the height as needed */
+    overflow-y: scroll;
+}
+
+/* Make table header sticky */
+.appointments-container th {
+    position: sticky;
+    top: 0;
+    background-color: #fff; /* Ensure the background is solid */
+    z-index: 1; /* Ensure the header is above the content if needed */
+}

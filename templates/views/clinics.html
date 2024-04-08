@@ -1,30 +1,30 @@
-{% extends 'base.html' %}
-
-{% block title %}Clinics{% endblock %}
-
-{% block content %}
-    <h1>Clinics</h1>
-    <hr>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Hospital</th>
-                <th>City</th>
-                <th>Province</th>
-                <th>Region</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for clinic in clinics %}
-            <tr>
-                <td>{{ clinic.id }}</td>
-                <td>{{ clinic.hospital }}</td>
-                <td>{{ clinic.city }}</td>
-                <td>{{ clinic.province }}</td>
-                <td>{{ clinic.region }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+{% extends 'base.html' %} {% block title %}Clinics{% endblock %} {% block
+content %}
+<h1>Clinics</h1>
+<hr />
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>ID</th>
+      <th>Hospital</th>
+      <th>City</th>
+      <th>Province</th>
+      <th>Region</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for _, clinic in clinics.iterrows() %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ clinic.clinicid }}</td>
+      <td>{{ clinic.hospitalname }}</td>
+      <td>{{ clinic.IsHospital }}</td>
+      <td>{{ clinic.City }}</td>
+      <td>{{ clinic.Province }}</td>
+      <td>{{ clinic.RegionName }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

@@ -48,15 +48,82 @@ def appointments():
 
 @app.route('/doctors')
 def doctors():
-    return render_template('views/doctors.html')
+    search = request.args.get('search')
+
+    engine = sa.create_engine(f"mysql+mysqldb://{USERNAME}:{PASSWORD}@ccscloud.dlsu.edu.ph:{PORT}/",
+                              isolation_level="READ COMMITTED")
+
+    stmt = sa.text(f"SELECT DISTINCT doctorid, mainspecialty, doctor_age FROM {SCHEMA}.{TABLE} ORDER BY doctorid;")
+
+    df = None
+
+    session = Session(engine)
+
+    with session.begin():
+        with engine.connect() as conn:
+            df = pd.read_sql_query(
+                stmt,
+                conn
+            )
+
+    # Close the database connection
+    engine.dispose()
+
+    return render_template('views/doctors.html',
+                           search_query=search if search else "",
+                           doctors=df)
 
 @app.route('/patients')
 def patients():
-    return render_template('views/patients.html')
+    search = request.args.get('search')
+
+    engine = sa.create_engine(f"mysql+mysqldb://{USERNAME}:{PASSWORD}@ccscloud.dlsu.edu.ph:{PORT}/",
+                              isolation_level="READ COMMITTED")
+
+    stmt = sa.text(f"SELECT DISTINCT pxid, patient_gender, patient_age FROM {SCHEMA}.{TABLE} ORDER BY pxid;")
+
+    df = None
+
+    session = Session(engine)
+
+    with session.begin():
+        with engine.connect() as conn:
+            df = pd.read_sql_query(
+                stmt,
+                conn
+            )
+
+    # Close the database connection
+    engine.dispose()
+    return render_template('views/patients.html',
+                           search_query=search if search else "",
+                           patients=df)
 
 @app.route('/clinics')
 def clinics():
-    return render_template('views/clinics.html')
+    search = request.args.get('search')
+
+    engine = sa.create_engine(f"mysql+mysqldb://{USERNAME}:{PASSWORD}@ccscloud.dlsu.edu.ph:{PORT}/",
+                              isolation_level="READ COMMITTED")
+
+    stmt = sa.text(f"SELECT DISTINCT clinicid, hospitalname, IsHospital, City, Province, RegionName FROM {SCHEMA}.{TABLE} ORDER BY clinicid;")
+
+    df = None
+
+    session = Session(engine)
+
+    with session.begin():
+        with engine.connect() as conn:
+            df = pd.read_sql_query(
+                stmt,
+                conn
+            )
+
+    # Close the database connection
+    engine.dispose()
+    return render_template('views/clinics.html',
+                           search_query=search if search else "",
+                           clinics=df)
 
 @app.route('/concurrency1')
 def concurrency1():
