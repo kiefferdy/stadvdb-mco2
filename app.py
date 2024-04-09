@@ -103,6 +103,8 @@ def appointments():
     engine.dispose()
 
     return render_template('views/appointments.html',
+                           nodes=nodes,
+                           selected_node=selected_node,
                            search_query=search if search else "",
                            max_results=max_results,
                            appointments=df_appointments,
