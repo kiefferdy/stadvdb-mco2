@@ -39,8 +39,6 @@ def create_seriousmd_schema():
                 PRIMARY KEY (apptid)
             )
         """))
-        
-# Create seriousmd Schemas
 
 start_time = time.time()
 
@@ -51,7 +49,7 @@ print(f"Created seriousmd schema in {time.time() - start_time:.2f} seconds")
 start_time = time.time()
 
 # Load seriousMD.csv into a DataFrame
-df = pd.read_csv('seriousMD.csv')
+df = pd.read_csv('../data/seriousmd.csv')
 print(f"Loaded seriousMD.csv into DataFrame in {time.time() - start_time:.2f} seconds")
 
 start_time = time.time()

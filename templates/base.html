@@ -31,6 +31,22 @@
                         <a class="nav-link" href="/clinics">Clinics</a>
                     </li>
                 </ul>
+                <form class="form-inline ml-auto">
+                    <div class="form-group">
+                        <select id="node-selector" class="form-control" name="node" onchange="window.location.href='/set_node?node=' + this.value;">
+                            {% for node in nodes %}
+                            <option value="{{ node.id }}" {% if node.id == selected_node %}selected{% endif %} data-online="{{ 'true' if node.online else 'false' }}" {% if not node.online %}disabled{% endif %}>
+                                Node {{ node.id }}
+                                {% if node.online %}
+                                    <span class="ml-1 text-success">&#128994;</span>
+                                {% else %}
+                                    <span class="ml-1 text-danger">&#128308;</span>
+                                {% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
             </div>
             <span class="dot" id="status1">1</span>
             &nbsp

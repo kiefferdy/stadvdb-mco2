@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, redirect, render_template, request, session, jsonify
 import sqlalchemy as sa
+import pymysql
 from sqlalchemy.orm import Session
 import pandas as pd
 
@@ -10,19 +11,66 @@ PASSWORD = "tCTDrUyJna2S4KRYN3bHqcmp"
 # MySQL Database Parameters
 SCHEMA = "seriousmd"
 TABLE = "appointments"
-PORT = 20171 # Can be 20171, 20172, or 20173
 
-# MySQL Database Engine
-engine = sa.create_engine(f"mysql+mysqldb://{USERNAME}:{PASSWORD}@ccscloud.dlsu.edu.ph:{PORT}/")
+# MySQL Database Nodes
+nodes = [
+    {"id": 20171, "online": True},
+    {"id": 20172, "online": True},
+    {"id": 20173, "online": True},
+]
 
 app = Flask(__name__)
+app.secret_key = 'MqWHf-e4QGyS7_xq4BiA9Qbs-0F4ADEH'
+
+# Function to get engine based on user's selected node
+def get_engine():
+    node = session.get('selected_node', 20171)
+    return sa.create_engine(f"mysql+mysqldb://{USERNAME}:{PASSWORD}@ccscloud.dlsu.edu.ph:{node}/")
+
+# Function to check if any node is offline
+def ping_node(node_id):
+    try:
+        connection = pymysql.connect(
+            host=f"ccscloud.dlsu.edu.ph",
+            port=node_id,
+            user=USERNAME,
+            password=PASSWORD,
+            database=SCHEMA,
+            connect_timeout=2
+        )
+        connection.close()
+        return True
+    except pymysql.Error:
+        return False
+
+# Function to update node status in web UI
+def update_node_status():
+    for node in nodes:
+        node["online"] = ping_node(node["id"])
+
+# -------
+# ROUTERS
+# -------
 
 @app.route('/')
 def home():
-    return render_template('views/index.html')
+    selected_node = session.get('selected_node', 20171)
+    return render_template('views/index.html', nodes=nodes, selected_node=selected_node)
+
+@app.route('/node_status')
+def node_status():
+    update_node_status()
+    return jsonify({"nodes": nodes})
+
+@app.route('/set_node')
+def set_node():
+    node = request.args.get('node', default=20171, type=int)
+    session['selected_node'] = node
+    return redirect(request.referrer)
 
 @app.route('/appointments')
 def appointments():
+    selected_node = session.get('selected_node', 20171)
     search = request.args.get('search', default='')
     max_results = request.args.get('max_results', default=25, type=int)
 
@@ -33,8 +81,9 @@ def appointments():
 
 
     df_appointments = None
-    session = Session(engine)
-    with session.begin():
+    engine = get_engine()
+    db_session = Session(engine)
+    with db_session.begin():
         with engine.connect() as conn:
             df_appointments = pd.read_sql_query(stmt_appointments, conn)
 
@@ -63,14 +112,16 @@ def appointments():
 
 @app.route('/doctors')
 def doctors():
+    selected_node = session.get('selected_node', 20171)
     search = request.args.get('search')
     max_results = request.args.get('max_results', default=25, type=int)
 
     stmt = sa.text(f"SELECT DISTINCT doctorid, mainspecialty, doctor_age FROM {SCHEMA}.{TABLE} ORDER BY doctorid\nLIMIT {max_results};")
 
     df = None
-    session = Session(engine)
-    with session.begin():
+    engine = get_engine()
+    db_session = Session(engine)
+    with db_session.begin():
         with engine.connect() as conn:
             df = pd.read_sql_query(
                 stmt,
@@ -80,20 +131,24 @@ def doctors():
     # Close the database connection
     engine.dispose()
     return render_template('views/doctors.html',
+                           nodes=nodes,
+                           selected_node=selected_node,
                            search_query=search if search else "",
                            max_results=max_results,
                            doctors=df)
 
 @app.route('/patients')
 def patients():
+    selected_node = session.get('selected_node', 20171)
     search = request.args.get('search')
     max_results = request.args.get('max_results', default=25, type=int)
 
     stmt = sa.text(f"SELECT DISTINCT pxid, patient_gender, patient_age FROM {SCHEMA}.{TABLE} ORDER BY pxid\nLIMIT {max_results};")
 
     df = None
-    session = Session(engine)
-    with session.begin():
+    engine = get_engine()
+    db_session = Session(engine)
+    with db_session.begin():
         with engine.connect() as conn:
             df = pd.read_sql_query(
                 stmt,
@@ -103,20 +158,24 @@ def patients():
     # Close the database connection
     engine.dispose()
     return render_template('views/patients.html',
+                           nodes=nodes,
+                           selected_node=selected_node,
                            search_query=search if search else "",
                            max_results=max_results,
                            patients=df)
 
 @app.route('/clinics')
 def clinics():
+    selected_node = session.get('selected_node', 20171)
     search = request.args.get('search')
     max_results = request.args.get('max_results', default=25, type=int)
 
     stmt = sa.text(f"SELECT DISTINCT clinicid, hospitalname, IsHospital, City, Province, RegionName FROM {SCHEMA}.{TABLE} ORDER BY clinicid\nLIMIT {max_results};")
 
     df = None
-    session = Session(engine)
-    with session.begin():
+    engine = get_engine()
+    db_session = Session(engine)
+    with db_session.begin():
         with engine.connect() as conn:
             df = pd.read_sql_query(
                 stmt,
@@ -126,6 +185,8 @@ def clinics():
     # Close the database connection
     engine.dispose()
     return render_template('views/clinics.html',
+                           nodes=nodes,
+                           selected_node=selected_node,
                            search_query=search if search else "",
                            max_results=max_results,
                            clinics=df)
