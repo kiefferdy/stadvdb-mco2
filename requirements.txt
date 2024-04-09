@@ -38,6 +38,8 @@ pandas==2.2.1
     # via -r requirements.in
 pip-tools==7.4.1
     # via -r requirements.in
+pymysql==1.1.0
+    # via -r requirements.in
 pyproject-hooks==1.0.0
     # via
     #   build
