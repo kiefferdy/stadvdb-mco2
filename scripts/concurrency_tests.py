@@ -54,7 +54,7 @@ def write_transaction_with_retry(node_id, apptid, status, max_attempts=5):
                 break
         except sqlalchemy.exc.OperationalError as e:
             if 'Deadlock found' in str(e):
-                print(f"Deadlock detected in write_transaction on node {node_id}, attempt {attempt + 1}. Retrying...")
+                print(f"Deadlock detected in write_transaction on node {node_id}, attempt {attempt + 1}. Retrying...\n")
                 time.sleep(0.1 * attempt)  # Exponential backoff could be considered here
                 attempt += 1
             else:
@@ -62,7 +62,7 @@ def write_transaction_with_retry(node_id, apptid, status, max_attempts=5):
                 raise e
     else:
         # Handle failure if all attempts have been exhausted
-        print(f"Failed to complete write_transaction on node {node_id} after {max_attempts} attempts due to deadlocks.")
+        print(f"Failed to complete write_transaction on node {node_id} after {max_attempts} attempts due to deadlocks.\n")
 
 
 def test_case_1():
@@ -86,7 +86,7 @@ def test_case_2():
     threads = []
     for i, node in enumerate(nodes):
         if i == 0:
-            thread = threading.Thread(target=write_transaction, args=(node["id"], apptid, "Queued"))
+            thread = threading.Thread(target=write_transaction, args=(node["id"], apptid, "Cancel"))
         else:
             thread = threading.Thread(target=read_transaction, args=(node["id"], apptid))
         threads.append(thread)
@@ -95,15 +95,19 @@ def test_case_2():
         thread.join()
 
 def test_case_3():
-    print("============================================================================================================")
-    print("Test Case #3: Concurrent transactions in two or more nodes are writing (update / delete) the same data item.")
-    print("============================================================================================================\n")
+    print("==========================================================================================================")
+    print("Test Case #3: Concurrent transactions in two or more nodes are writing (update/delete) the same data item.")
+    print("==========================================================================================================\n")
     apptid = "00038F63FCBF2233D5D5ECC39BE31D7F"  # Specify the apptid to write
+    statuses = ["Complete", "Skip", "NoShow"]  # Define different statuses for each transaction
     threads = []
-    for node in nodes:
-        thread = threading.Thread(target=write_transaction_with_retry, args=(node["id"], apptid, "Queued"))
+
+    # Assuming each status update should happen on a separate node, hence the zip if nodes are 3.
+    for node, status in zip(nodes, statuses):
+        thread = threading.Thread(target=write_transaction_with_retry, args=(node["id"], apptid, status))
         threads.append(thread)
         thread.start()
+
     for thread in threads:
         thread.join()
 
