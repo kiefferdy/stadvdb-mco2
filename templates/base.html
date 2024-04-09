@@ -6,6 +6,8 @@
     <title>{% block title %}{% endblock %} - SeriousMD</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -46,6 +48,14 @@
                     </div>
                 </form>
             </div>
+            &nbsp
+            &nbsp;
+            <span class="navbar-brand">Transaction Status:</span>
+            <span class="dot" id="status1">1</span>
+            &nbsp
+            <span class="dot" id="status2">2</span>
+            &nbsp
+            <span class="dot" id="status3">3</span>
         </div>
     </nav>
 

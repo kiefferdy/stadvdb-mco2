@@ -86,25 +86,23 @@ def appointments():
     with db_session.begin():
         with engine.connect() as conn:
             df_appointments = pd.read_sql_query(stmt_appointments, conn)
-    
+
     # Fetch unique doctor IDs
     stmt_doctors = sa.text(f"SELECT DISTINCT doctorid FROM {SCHEMA}.{TABLE}")
     df_doctors = pd.read_sql_query(stmt_doctors, engine)
-    
+
     # Fetch unique patient IDs
     stmt_patients = sa.text(f"SELECT DISTINCT pxid FROM {SCHEMA}.{TABLE}")
     df_patients = pd.read_sql_query(stmt_patients, engine)
-    
+
     # Fetch unique clinic IDs
     stmt_clinics = sa.text(f"SELECT DISTINCT clinicid FROM {SCHEMA}.{TABLE}")
     df_clinics = pd.read_sql_query(stmt_clinics, engine)
-    
+
     # Close the database connection
     engine.dispose()
 
     return render_template('views/appointments.html',
-                           nodes=nodes,
-                           selected_node=selected_node,
                            search_query=search if search else "",
                            max_results=max_results,
                            appointments=df_appointments,
@@ -198,6 +196,19 @@ def concurrency1():
     status = request.args.get('status')
     level = request.args.get('level')
     return render_template('views/concurrency1.html', status=status, level=level)
+
+@app.route('/status')
+def getServerStatus():
+    stmt = sa.text("SELECT COUNT(*) as 'ActiveCount' FROM INFORMATION_SCHEMA.INNODB_TRX WHERE trx_query NOT LIKE 'SELECT * FROM INFORMATION_SCHEMA.INNODB_TRX%';")
+    data = {}
+    for i in range(1, 3 + 1):
+        eng = sa.create_engine(f"mysql+mysqldb://{USERNAME}:{PASSWORD}@ccscloud.dlsu.edu.ph:2017{i}/")
+        session = Session(bind=eng)
+        with session.begin():
+            session.connection(execution_options={"isolation_level": "READ UNCOMMITTED"})
+            main = pd.read_sql_query(stmt, eng)
+        data[str(i)] = True if main.iloc[0]['ActiveCount'] > 0 else False
+    return jsonify(data)
 
 if __name__ == '__main__':
     app.run(debug=True)

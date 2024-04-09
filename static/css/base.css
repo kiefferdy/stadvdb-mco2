@@ -103,3 +103,13 @@ body {
     background-color: #f8d7da; /* Light red background for offline nodes */
     color: #721c24; /* Dark red text for better contrast */
 }
+
+.dot {
+    height: 25px;
+    width: 25px;
+    background-color: lime;
+    color: gray;
+    border-radius: 50%;
+    display: inline-block;
+    text-align: center;
+  }
