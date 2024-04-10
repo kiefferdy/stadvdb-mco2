@@ -28,6 +28,7 @@ def get_engine():
     return sa.create_engine(f"mysql+mysqldb://{USERNAME}:{PASSWORD}@ccscloud.dlsu.edu.ph:{node}/")
 
 # Function to check if any node is offline
+
 def ping_node(node_id):
     try:
         connection = pymysql.connect(
@@ -211,6 +212,51 @@ def getServerStatus():
             main = pd.read_sql_query(stmt, eng)
         data[str(i)] = True if main.iloc[0]['ActiveCount'] > 0 else False
     return jsonify(data)
+
+@app.route('/delete_appointment/<apptid>', methods=['POST'])
+def delete_appointment(apptid):
+    selected_node = session.get('selected_node', 20171)
+    engine = get_engine()
+    db_session = Session(engine)
+
+    try:
+        # Delete the appointment from the database
+        stmt = sa.text(f"DELETE FROM {SCHEMA}.{TABLE} WHERE apptid = :apptid")
+        with db_session.begin():
+            with engine.connect() as conn:
+                conn.execute(stmt, {'apptid': apptid})
+    except Exception as e:
+        # Handle any exceptions that occur during the database operation
+        print(f"An error occurred: {str(e)}")
+    finally:
+        # Close the database connection
+        engine.dispose()
+        
+    return redirect('/appointments')
+
+@app.route('/edit_appointment/<apptid>', methods=['POST'])
+def edit_appointment(apptid):
+    selected_node = session.get('selected_node', 20171)
+    engine = get_engine()
+    db_session = Session(engine)
+
+    # Update the appointment in the database
+    stmt = sa.text(f"UPDATE {SCHEMA}.{TABLE} SET doctorid = :doctorid, pxid = :pxid, clinicid = :clinicid, StartTime = :start_time, EndTime = :end_time, type = :type, `Virtual` = ':virtual' WHERE apptid = :apptid")
+    with db_session.begin():
+        with engine.connect() as conn:
+            conn.execute(stmt, {
+                'apptid': apptid,
+                'doctorid': request.form['doctor'],
+                'pxid': request.form['patient'],
+                'clinicid': request.form['clinic'],
+                'start_time': request.form['start_time'],
+                'end_time': request.form['end_time'],
+                'type': request.form['type'],
+                'virtual': 1 if 'virtual' in request.form else 0
+            })
+
+    engine.dispose()
+    return redirect('/appointments')
 
 if __name__ == '__main__':
     app.run(debug=True)
