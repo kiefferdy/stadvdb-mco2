@@ -258,5 +258,31 @@ def edit_appointment(apptid):
     engine.dispose()
     return redirect('/appointments')
 
+@app.route('/add_appointment', methods=['POST'])
+def add_appointment():
+    selected_node = session.get('selected_node', 20171)
+    engine = get_engine()
+    db_session = Session(engine)
+
+    # Insert the new appointment into the database
+    stmt = sa.text(f"INSERT INTO {SCHEMA}.{TABLE} (apptid, doctorid, pxid, clinicid, StartTime, EndTime, type, `Virtual`) VALUES (:apptid, :doctorid, :pxid, :clinicid, :start_time, :end_time, :type, :virtual)")
+    with db_session.begin():
+        with engine.connect() as conn:
+            conn.execute(stmt, {
+                'apptid': request.form['apptid'],
+                'doctorid': request.form['doctor'],
+                'pxid': request.form['patient'],
+                'clinicid': request.form['clinic'],
+                'start_time': request.form['start_time'],
+                'end_time': request.form['end_time'],
+                'type': request.form['type'],
+                'virtual': 1 if 'virtual' in request.form else 0
+            })
+
+    engine.dispose()
+    return redirect('/appointments')
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)

@@ -30,7 +30,12 @@
     </div>
 </div>
 <hr />
-<h2>Upcoming Appointments</h2>
+<div class="d-flex justify-content-between align-items-center">
+    <h2>Upcoming Appointments</h2>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addAppointmentModal">
+        Add Appointment
+    </button>
+</div>
 <form action="/appointments" method="GET">
     <div class="form-group d-flex align-items-center mb-3">
         <label for="max_results" class="mr-2">Max number of results:</label>
@@ -96,6 +101,7 @@
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
+                        
                         <form action="/edit_appointment/{{ appointment.apptid }}" method="POST">
                             <div class="modal-body">
                                 <div class="form-group">
@@ -162,77 +168,96 @@
     </table>
 </div>
 
-<!-- End of scrollable container -->
-<hr />
-<h2>Add Appointment</h2>
-<form action="/add_appointment" method="POST">
-    <div class="form-group">
-        <label for="doctor">Doctor:</label>
-        <select class="form-control" id="doctor" name="doctor" required>
-            <option value="">Select Doctor ID</option>
-            {% for _, doctor in doctors.iterrows() %}
-            <option value="{{ doctor.doctorid }}">{{ doctor.doctorid }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="patient">Patient:</label>
-        <select class="form-control" id="patient" name="patient" required>
-            <option value="">Select Patient ID</option>
-            {% for _, patient in patients.iterrows() %}
-            <option value="{{ patient.pxid }}">{{ patient.pxid }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="hospital">Clinic:</label>
-        <select class="form-control" id="clinic" name="clinic" required>
-            <option value="">Select Clinic ID</option>
-            {% for _, clinic in clinics.iterrows() %}
-            <option value="{{ clinic.clinicid }}">{{ clinic.clinicid }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="start_time">Start Time:</label>
-        <input
-            type="datetime-local"
-            class="form-control"
-            id="start_time"
-            name="start_time"
-            required
-            />
-    </div>
-    <div class="form-group">
-        <label for="end_time">End Time:</label>
-        <input
-            type="datetime-local"
-            class="form-control"
-            id="end_time"
-            name="end_time"
-            required
-            />
-    </div>
-    <div class="form-group">
-        <label for="type">Type:</label>
-        <select class="form-control" id="type" name="type" required>
-            <option value="">Select Type</option>
-            <option value="Consultation">Consultation</option>
-            <option value="Follow-up">Inpatient</option>
-        </select>
-    </div>
-    <div class="form-group">
-        <div class="form-check">
-            <input
-                type="checkbox"
-                class="form-check-input"
-                id="virtual"
-                name="virtual"
-                />
-            <label class="form-check-label" for="virtual">Virtual</label>
+<!-- Add Appointment Modal -->
+<div class="modal fade" id="addAppointmentModal" tabindex="-1" role="dialog" aria-labelledby="addAppointmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addAppointmentModalLabel">Add Appointment</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ url_for('add_appointment') }}" method="POST">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="apptid">Appointment ID:</label>
+                        <input type="text" class="form-control" id="apptid" name="apptid" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="doctor">Doctor:</label>
+                        <select class="form-control" id="doctor" name="doctor" required>
+                            <option value="">Select Doctor ID</option>
+                            {% for _, doctor in doctors.iterrows() %}
+                            <option value="{{ doctor.doctorid }}">{{ doctor.doctorid }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="patient">Patient:</label>
+                        <select class="form-control" id="patient" name="patient" required>
+                            <option value="">Select Patient ID</option>
+                            {% for _, patient in patients.iterrows() %}
+                            <option value="{{ patient.pxid }}">{{ patient.pxid }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="hospital">Clinic:</label>
+                        <select class="form-control" id="clinic" name="clinic" required>
+                            <option value="">Select Clinic ID</option>
+                            {% for _, clinic in clinics.iterrows() %}
+                            <option value="{{ clinic.clinicid }}">{{ clinic.clinicid }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="start_time">Start Time:</label>
+                        <input
+                            type="datetime-local"
+                            class="form-control"
+                            id="start_time"
+                            name="start_time"
+                            required
+                            />
+                    </div>
+                    <div class="form-group">
+                        <label for="end_time">End Time:</label>
+                        <input
+                            type="datetime-local"
+                            class="form-control"
+                            id="end_time"
+                            name="end_time"
+                            required
+                            />
+                    </div>
+                    <div class="form-group">
+                        <label for="type">Type:</label>
+                        <select class="form-control" id="type" name="type" required>
+                            <option value="">Select Type</option>
+                            <option value="Consultation">Consultation</option>
+                            <option value="Inpatient">Inpatient</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input
+                                type="checkbox"
+                                class="form-check-input"
+                                id="virtual"
+                                name="virtual"
+                                />
+                            <label class="form-check-label" for="virtual">Virtual</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add Appointment</button>
+                </div>
+            </form>
         </div>
     </div>
-    <button type="submit" class="btn btn-primary">Add Appointment</button>
-</form>
+</div>
 
 {% endblock %}
