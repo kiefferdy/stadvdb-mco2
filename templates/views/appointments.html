@@ -30,7 +30,12 @@
     </div>
 </div>
 <hr />
-<h2>Upcoming Appointments</h2>
+<div class="d-flex justify-content-between align-items-center">
+    <h2>Upcoming Appointments</h2>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addAppointmentModal">
+        Add Appointment
+    </button>
+</div>
 <form action="/appointments" method="GET">
     <div class="form-group d-flex align-items-center mb-3">
         <label for="max_results" class="mr-2">Max number of results:</label>
@@ -40,6 +45,8 @@
             <option value="100" {% if max_results == 100 %}selected{% endif %}>100</option>
             <option value="200" {% if max_results == 200 %}selected{% endif %}>200</option>
             <option value="500" {% if max_results == 500 %}selected{% endif %}>500</option>
+            <option value="1000" {% if max_results == 1000 %}selected{% endif %}>1000</option>
+            <option value="999999" {% if max_results == 999999 %}selected{% endif %}>All</option>
         </select>
         <input type="hidden" name="search" value="{{ search_query }}">
     </div>
@@ -164,6 +171,18 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label for="type">Status:</label>
+                        <select class="form-control" id="status" name="status" required>
+                            <option value="">Select Status</option>
+                            <option value="Cancel">Cancel</option>
+                            <option value="Complete">Complete</option>
+                            <option value="NoShow">NoShow</option>
+                            <option value="Queued">Queued</option>
+                            <option value="Serving">Serving</option>
+                            <option value="Skip">Skip</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <div class="form-check">
                             <input
                                 type="checkbox"
@@ -238,6 +257,18 @@
                             <option value="">Select Type</option>
                             <option value="Consultation" {% if appointment.type == 'Consultation' %}selected{% endif %}>Consultation</option>
                             <option value="Inpatient" {% if appointment.type == 'Inpatient' %}selected{% endif %}>Inpatient</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="type">Status:</label>
+                        <select class="form-control" id="status" name="status" required>
+                            <option value="">Select Status</option>
+                            <option value="Cancel" {% if appointment.status == 'Cancel' %}selected{% endif %}>Cancel</option>
+                            <option value="Complete" {% if appointment.status == 'Complete' %}selected{% endif %}>Complete</option>
+                            <option value="NoShow" {% if appointment.status == 'NoShow' %}selected{% endif %}>NoShow</option>
+                            <option value="Queued" {% if appointment.status == 'Queued' %}selected{% endif %}>Queued</option>
+                            <option value="Serving" {% if appointment.status == 'Serving' %}selected{% endif %}>Serving</option>
+                            <option value="Skip" {% if appointment.status == 'Skip' %}selected{% endif %}>Skip</option>
                         </select>
                     </div>
                     <div class="form-group">

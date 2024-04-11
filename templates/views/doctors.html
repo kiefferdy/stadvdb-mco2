@@ -15,6 +15,8 @@
             <option value="100" {% if max_results == 100 %}selected{% endif %}>100</option>
             <option value="200" {% if max_results == 200 %}selected{% endif %}>200</option>
             <option value="500" {% if max_results == 500 %}selected{% endif %}>500</option>
+            <option value="1000" {% if max_results == 1000 %}selected{% endif %}>1000</option>
+            <option value="999999" {% if max_results == 999999 %}selected{% endif %}>All</option>
         </select>
         <input type="hidden" name="search" value="{{ search_query }}">
     </div>

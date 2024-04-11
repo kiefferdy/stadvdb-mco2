@@ -27,7 +27,7 @@ def init_engines():
     for node in nodes:
         try:
             engine_url = engine_url_template.format(port=node['id'])
-            node["engine"] = sa.create_engine(engine_url, echo=True, pool_pre_ping=True)
+            node["engine"] = sa.create_engine(engine_url, echo=False, pool_pre_ping=True)
         except Exception as e:
             node["online"] = False
             print(f"Warning: Offline note detected. Failed to connect to database on node {node['id']}: {e}")
@@ -135,12 +135,15 @@ def appointments():
         else:
             sql = sa.text(f"SELECT * FROM {TABLE} LIMIT :max_results")
 
+        doctors_sql = sa.text(f"SELECT DISTINCT doctorid FROM {TABLE}")
+        patients_sql = sa.text(f"SELECT DISTINCT pxid FROM {TABLE}")
+        clinics_sql = sa.text(f"SELECT DISTINCT clinicid FROM {TABLE}")
+
         with engine.begin() as conn:  # Begins a transaction
             df_appointments = pd.read_sql_query(sql, conn, params={'search': search, 'max_results': max_results})
-
-        df_doctors = pd.DataFrame(df_appointments['doctorid'].unique(), columns=['doctorid'])
-        df_patients = pd.DataFrame(df_appointments['pxid'].unique(), columns=['pxid'])
-        df_clinics = pd.DataFrame(df_appointments['clinicid'].unique(), columns=['clinicid'])
+            df_doctors = pd.read_sql_query(doctors_sql, conn)
+            df_patients = pd.read_sql_query(patients_sql, conn)
+            df_clinics = pd.read_sql_query(clinics_sql, conn)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -174,6 +177,7 @@ def create_appointment():
                 'start_time': request.form['start_time'],
                 'end_time': request.form['end_time'],
                 'type': request.form['type'],
+                'status': request.form['status'],
                 'virtual': 1 if 'virtual' in request.form else 0
             })
 
@@ -201,6 +205,7 @@ def update_appointment(apptid):
                 'start_time': request.form['start_time'],
                 'end_time': request.form['end_time'],
                 'type': request.form['type'],
+                'status': request.form['status'],
                 'virtual': 1 if 'virtual' in request.form else 0
             })
 
