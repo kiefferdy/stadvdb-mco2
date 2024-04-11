@@ -1,4 +1,5 @@
 from flask import Flask, redirect, render_template, request, session, jsonify
+from datetime import datetime
 import sqlalchemy as sa
 import pandas as pd
 import random
@@ -136,7 +137,7 @@ def appointments():
             sql = sa.text(f"SELECT * FROM {TABLE} LIMIT :max_results")
 
         doctors_sql = sa.text(f"SELECT DISTINCT doctorid FROM {TABLE}")
-        patients_sql = sa.text(f"SELECT DISTINCT pxid FROM {TABLE}")
+        patients_sql = sa.text(f"SELECT DISTINCT pxid FROM {TABLE} LIMIT 500")
         clinics_sql = sa.text(f"SELECT DISTINCT clinicid FROM {TABLE}")
 
         with engine.begin() as conn:  # Begins a transaction
@@ -182,6 +183,48 @@ def create_appointment():
             })
 
         return redirect('/appointments')
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/appointments/get/<apptid>')
+def get_appointment(apptid):
+    engine = get_engine()
+    if not engine:
+        return jsonify({"error": "All database nodes are currently offline."}), 503
+
+    try:
+        stmt = sa.text(f"SELECT * FROM {TABLE} WHERE apptid = :apptid")
+        with engine.connect() as conn:
+            result = conn.execute(stmt, {'apptid': apptid})
+            appointment = result.fetchone()
+
+        if appointment:
+            appointment_dict = {
+                "pxid": appointment[0],
+                "clinicid": appointment[1],
+                "doctorid": appointment[2],
+                "apptid": appointment[3],
+                "status": appointment[4],
+                "TimeQueued": appointment[5].isoformat() if isinstance(appointment[5], datetime) else appointment[5],
+                "QueueDate": appointment[6].isoformat() if isinstance(appointment[6], datetime) else appointment[6],
+                "StartTime": appointment[7].isoformat() if isinstance(appointment[7], datetime) else appointment[7],
+                "EndTime": appointment[8].isoformat() if isinstance(appointment[8], datetime) else appointment[8],
+                "type": appointment[9],
+                "Virtual": bool(appointment[10]),
+                "hospitalname": appointment[11],
+                "IsHospital": bool(appointment[12]),
+                "City": appointment[13],
+                "Province": appointment[14],
+                "RegionName": appointment[15],
+                "mainspecialty": appointment[16],
+                "doctor_age": appointment[17],
+                "patient_age": appointment[18],
+                "patient_gender": appointment[19]
+            }
+            return jsonify(appointment_dict)
+        else:
+            return jsonify({"error": "Appointment not found."}), 404
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
