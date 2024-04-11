@@ -89,7 +89,6 @@ def update_node_status():
 
 @app.route('/')
 def home():
-    update_node_status()
     selected_node = session.get('selected_node', 20171)
     return render_template('views/index.html', nodes=nodes, selected_node=selected_node)
 
@@ -122,7 +121,6 @@ def set_node():
 
 @app.route('/appointments')
 def appointments():
-    update_node_status()
     selected_node = session.get('selected_node', 20171)
     search = request.args.get('search', default='')
     max_results = request.args.get('max_results', default=25, type=int)
@@ -157,9 +155,80 @@ def appointments():
                            patients=df_patients,
                            clinics=df_clinics)
 
+@app.route('/appointments/create', methods=['POST'])
+def create_appointment():
+    engine = get_engine()
+    if not engine:
+        return jsonify({"error": "All database nodes are currently offline."}), 503
+
+    try:
+        # Insert the new appointment into the database
+        stmt = sa.text(f"INSERT INTO {TABLE} (apptid, doctorid, pxid, clinicid, StartTime, EndTime, type, `Virtual`) VALUES (:apptid, :doctorid, :pxid, :clinicid, :start_time, :end_time, :type, :virtual)")
+
+        with engine.begin() as conn:
+            conn.execute(stmt, {
+                'apptid': request.form['apptid'],
+                'doctorid': request.form['doctor'],
+                'pxid': request.form['patient'],
+                'clinicid': request.form['clinic'],
+                'start_time': request.form['start_time'],
+                'end_time': request.form['end_time'],
+                'type': request.form['type'],
+                'virtual': 1 if 'virtual' in request.form else 0
+            })
+
+        return redirect('/appointments')
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/appointments/update/<apptid>', methods=['POST'])
+def update_appointment(apptid):
+    engine = get_engine()
+    if not engine:
+        return jsonify({"error": "All database nodes are currently offline."}), 503
+
+    try:
+        # Update the appointment in the database
+        stmt = sa.text(f"UPDATE {TABLE} SET doctorid = :doctorid, pxid = :pxid, clinicid = :clinicid, StartTime = :start_time, EndTime = :end_time, type = :type, `Virtual` = :virtual WHERE apptid = :apptid")
+
+        with engine.begin() as conn:
+            conn.execute(stmt, {
+                'apptid': apptid,
+                'doctorid': request.form['doctor'],
+                'pxid': request.form['patient'],
+                'clinicid': request.form['clinic'],
+                'start_time': request.form['start_time'],
+                'end_time': request.form['end_time'],
+                'type': request.form['type'],
+                'virtual': 1 if 'virtual' in request.form else 0
+            })
+
+        return redirect('/appointments')
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/appointments/delete/<apptid>', methods=['POST'])
+def delete_appointment(apptid):
+    engine = get_engine()
+    if not engine:
+        return jsonify({"error": "All database nodes are currently offline."}), 503
+
+    try:
+        # Delete the appointment from the database
+        stmt = sa.text(f"DELETE FROM {TABLE} WHERE apptid = :apptid")
+
+        with engine.begin() as conn:
+            conn.execute(stmt, {'apptid': apptid})
+
+        return redirect('/appointments')
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/doctors')
 def doctors():
-    update_node_status()
     selected_node = session.get('selected_node', 20171)
     max_results = request.args.get('max_results', default=25, type=int)
 
@@ -183,7 +252,6 @@ def doctors():
 
 @app.route('/patients')
 def patients():
-    update_node_status()
     selected_node = session.get('selected_node', 20171)
     max_results = request.args.get('max_results', default=25, type=int)
 
@@ -207,7 +275,6 @@ def patients():
 
 @app.route('/clinics')
 def clinics():
-    update_node_status()
     selected_node = session.get('selected_node', 20171)
     max_results = request.args.get('max_results', default=25, type=int)
 
