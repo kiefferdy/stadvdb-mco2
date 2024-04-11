@@ -278,6 +278,7 @@ def delete_appointment(apptid):
 @app.route('/doctors')
 def doctors():
     selected_node = session.get('selected_node', 20171)
+    search = request.args.get('search', default='')
     max_results = request.args.get('max_results', default=25, type=int)
 
     engine = get_engine()
@@ -285,9 +286,13 @@ def doctors():
         return jsonify({"error": "All database nodes are currently offline."}), 503
 
     try:
-        sql = sa.text(f"SELECT DISTINCT doctorid, mainspecialty, doctor_age FROM {TABLE} ORDER BY doctorid LIMIT :max_results")
+        if search:
+            sql = sa.text(f"SELECT DISTINCT doctorid, mainspecialty, doctor_age FROM {TABLE} WHERE doctorid = :search ORDER BY doctorid LIMIT :max_results")
+        else:
+            sql = sa.text(f"SELECT DISTINCT doctorid, mainspecialty, doctor_age FROM {TABLE} ORDER BY doctorid LIMIT :max_results")
+
         with engine.begin() as conn:
-            df_doctors = pd.read_sql_query(sql, conn, params={'max_results': max_results})
+            df_doctors = pd.read_sql_query(sql, conn, params={'search': search, 'max_results': max_results})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -295,12 +300,14 @@ def doctors():
     return render_template('views/doctors.html',
                            nodes=nodes,
                            selected_node=selected_node,
+                           search_query=search if search else "",
                            max_results=max_results,
                            doctors=df_doctors)
 
 @app.route('/patients')
 def patients():
     selected_node = session.get('selected_node', 20171)
+    search = request.args.get('search', default='')
     max_results = request.args.get('max_results', default=25, type=int)
 
     engine = get_engine()
@@ -308,9 +315,13 @@ def patients():
         return jsonify({"error": "All database nodes are currently offline."}), 503
 
     try:
-        sql = sa.text(f"SELECT DISTINCT pxid, patient_gender, patient_age FROM {TABLE} ORDER BY pxid LIMIT :max_results")
+        if search:
+            sql = sa.text(f"SELECT DISTINCT pxid, patient_gender, patient_age FROM {TABLE} WHERE pxid = :search ORDER BY pxid LIMIT :max_results")
+        else:
+            sql = sa.text(f"SELECT DISTINCT pxid, patient_gender, patient_age FROM {TABLE} ORDER BY pxid LIMIT :max_results")
+
         with engine.begin() as conn:
-            df_patients = pd.read_sql_query(sql, conn, params={'max_results': max_results})
+            df_patients = pd.read_sql_query(sql, conn, params={'search': search, 'max_results': max_results})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -318,12 +329,14 @@ def patients():
     return render_template('views/patients.html',
                            nodes=nodes,
                            selected_node=selected_node,
+                           search_query=search if search else "",
                            max_results=max_results,
                            patients=df_patients)
 
 @app.route('/clinics')
 def clinics():
     selected_node = session.get('selected_node', 20171)
+    search = request.args.get('search', default='')
     max_results = request.args.get('max_results', default=25, type=int)
 
     engine = get_engine()
@@ -331,9 +344,13 @@ def clinics():
         return jsonify({"error": "All database nodes are currently offline."}), 503
 
     try:
-        sql = sa.text(f"SELECT DISTINCT clinicid, hospitalname, City, Province, RegionName FROM {TABLE} ORDER BY clinicid LIMIT :max_results")
+        if search:
+            sql = sa.text(f"SELECT DISTINCT clinicid, hospitalname, City, Province, RegionName FROM {TABLE} WHERE clinicid = :search ORDER BY clinicid LIMIT :max_results")
+        else:
+            sql = sa.text(f"SELECT DISTINCT clinicid, hospitalname, City, Province, RegionName FROM {TABLE} ORDER BY clinicid LIMIT :max_results")
+
         with engine.begin() as conn:
-            df_clinics = pd.read_sql_query(sql, conn, params={'max_results': max_results})
+            df_clinics = pd.read_sql_query(sql, conn, params={'search': search, 'max_results': max_results})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -341,6 +358,7 @@ def clinics():
     return render_template('views/clinics.html',
                            nodes=nodes,
                            selected_node=selected_node,
+                           search_query=search if search else "",
                            max_results=max_results,
                            clinics=df_clinics)
 

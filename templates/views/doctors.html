@@ -6,6 +6,30 @@
 
 <h1>Doctors</h1>
 <hr />
+<div class="row">
+    <div class="col-md-6">
+        <h2>Search Doctors</h2>
+        <form action="/doctors" method="GET">
+            <div class="form-group">
+                <div class="input-group">
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="search"
+                        name="search"
+                        placeholder="Enter a doctor ID"
+                        value="{{ search_query }}"
+                        />
+                    <div class="input-group-append">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                        <a href="/doctors" class="btn btn-secondary">Clear</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<hr />
 <form action="/doctors" method="GET">
     <div class="form-group d-flex align-items-center mb-3">
         <label for="max_results" class="mr-2">Max number of results:</label>
