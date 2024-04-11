@@ -1,6 +1,7 @@
 from flask import Flask, redirect, render_template, request, session, jsonify
 import sqlalchemy as sa
 import pandas as pd
+import random
 
 # MySQL Database Config
 HOST = "ccscloud.dlsu.edu.ph"
@@ -20,29 +21,55 @@ nodes = [
 app = Flask(__name__)
 app.secret_key = 'MqWHf-e4QGyS7_xq4BiA9Qbs-0F4ADEH'
 
-# Initialize engines for each node
+# Initializes engines for each node
 def init_engines():
     engine_url_template = f"mysql+pymysql://{USERNAME}:{PASSWORD}@{HOST}:{{port}}/{SCHEMA}"
     for node in nodes:
-        if node["online"]:
-            try:
-                engine_url = engine_url_template.format(port=node['id'])
-                node["engine"] = sa.create_engine(engine_url, echo=True, pool_pre_ping=True)
-            except Exception as e:
-                node["online"] = False
-                print(f"Failed to connect to database on node {node['id']}: {e}")
+        try:
+            engine_url = engine_url_template.format(port=node['id'])
+            node["engine"] = sa.create_engine(engine_url, echo=True, pool_pre_ping=True)
+        except Exception as e:
+            node["online"] = False
+            print(f"Warning: Offline note detected. Failed to connect to database on node {node['id']}: {e}")
 
 init_engines()
 
-# Function to get engine based on user's selected node
+# Gets engine based on user's selected node (will automatically switch node if selected node is offline)
 def get_engine():
-    node_id = session.get('selected_node', 20171)
-    for node in nodes:
-        if node['id'] == node_id:
+    node_id = session.get('selected_node', None)
+    if node_id:
+        node = next((node for node in nodes if node['id'] == node_id and node['online']), None)
+        if node:
             return node['engine']
-    return None
 
-# Function to check if any node is offline
+    # If no node is selected or selected node is offline, pick a new online node randomly
+    new_node_id = get_random_online_node()
+    if new_node_id is None:
+        print("Error: All database nodes are currently offline!")
+        return None
+
+    session['selected_node'] = new_node_id
+    return next(node['engine'] for node in nodes if node['id'] == new_node_id)
+
+# Updates node statuses before every request
+@app.before_request
+def ensure_node_availability():
+    update_node_status()
+    selected_node_id = session.get('selected_node')
+    if selected_node_id not in [node['id'] for node in nodes if node['online']]:
+        new_node_id = get_random_online_node()
+        if new_node_id is None:
+            return jsonify({"error": "All database nodes are currently offline."}), 503
+        session['selected_node'] = new_node_id
+
+# Gets a random online node
+def get_random_online_node():
+    online_nodes = [node for node in nodes if node['online']]
+    if not online_nodes:
+        return None
+    return random.choice(online_nodes)['id']
+
+# Checks whether the specified node is online
 def ping_node(node_id):
     for node in nodes:
         if node['id'] == node_id:
@@ -55,14 +82,10 @@ def ping_node(node_id):
                 return False
     return False
 
-# Function to update node statuses
+# Updates the status of each node
 def update_node_status():
     for node in nodes:
         node["online"] = ping_node(node["id"])
-
-# -------
-# ROUTERS
-# -------
 
 @app.route('/')
 def home():
@@ -106,7 +129,7 @@ def appointments():
 
     engine = get_engine()
     if not engine:
-        return jsonify({"error": "Database connection error"}), 500
+        return jsonify({"error": "All database nodes are currently offline."}), 503
 
     try:
         if search:
@@ -142,7 +165,7 @@ def doctors():
 
     engine = get_engine()
     if not engine:
-        return jsonify({"error": "Database connection error"}), 500
+        return jsonify({"error": "All database nodes are currently offline."}), 503
 
     try:
         sql = sa.text(f"SELECT DISTINCT doctorid, mainspecialty, doctor_age FROM {TABLE} ORDER BY doctorid LIMIT :max_results")
@@ -166,7 +189,7 @@ def patients():
 
     engine = get_engine()
     if not engine:
-        return jsonify({"error": "Database connection error"}), 500
+        return jsonify({"error": "All database nodes are currently offline."}), 503
 
     try:
         sql = sa.text(f"SELECT DISTINCT pxid, patient_gender, patient_age FROM {TABLE} ORDER BY pxid LIMIT :max_results")
@@ -190,7 +213,7 @@ def clinics():
 
     engine = get_engine()
     if not engine:
-        return jsonify({"error": "Database connection error"}), 500
+        return jsonify({"error": "All database nodes are currently offline."}), 503
 
     try:
         sql = sa.text(f"SELECT DISTINCT clinicid, hospitalname, City, Province, RegionName FROM {TABLE} ORDER BY clinicid LIMIT :max_results")
