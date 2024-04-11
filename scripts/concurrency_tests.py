@@ -25,7 +25,7 @@ def create_engine(node_id):
 # Read transaction
 def read_transaction(node_id, apptid):
     engine = nodes[node_id - 20171]["engine"]
-    with engine.begin() as conn:  # Context manager for transaction management
+    with engine.begin() as conn:
         stmt = sa.text(f"SELECT * FROM {SCHEMA}.{TABLE} WHERE apptid = :apptid").bindparams(apptid=apptid)
         result = conn.execute(stmt).fetchall()
         print(f"[Node {node_id}] Read transaction result: {result}\n")
@@ -80,7 +80,7 @@ def test_case_1():
 
 def test_case_2():
     print("============================================================================================================================================================")
-    print("Test Case #2: At least one transaction in the three nodes is writing (update / delete) and the other concurrent transactions are reading the same data item.")
+    print("Test Case #2: At least one transaction in the three nodes is writing (update/delete) and the other concurrent transactions are reading the same data item.")
     print("============================================================================================================================================================\n")
     apptid = "0000898824452C2A9911EB89BE398099"  # Specify the apptid to read and write
     threads = []
@@ -102,7 +102,6 @@ def test_case_3():
     statuses = ["Complete", "Skip", "NoShow"]  # Define different statuses for each transaction
     threads = []
 
-    # Assuming each status update should happen on a separate node, hence the zip if nodes are 3.
     for node, status in zip(nodes, statuses):
         thread = threading.Thread(target=write_transaction_with_retry, args=(node["id"], apptid, status))
         threads.append(thread)
