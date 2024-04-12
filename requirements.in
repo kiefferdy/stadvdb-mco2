@@ -4,3 +4,4 @@ pymysql
 sqlalchemy
 mysqlclient
 pandas
+cryptography

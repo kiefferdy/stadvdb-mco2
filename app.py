@@ -26,11 +26,12 @@ app.secret_key = 'MqWHf-e4QGyS7_xq4BiA9Qbs-0F4ADEH'
 # Initializes engines for each node
 def init_engines():
     engine_url_template = f"mysql+pymysql://{USERNAME}:{PASSWORD}@{HOST}:{{port}}/{SCHEMA}"
+    connect_args = {"connect_timeout": 3}  # Timeout in seconds
     for node in nodes:
         if not node["engine"]:  # Initialize engine if it doesn't exist or reinitialize if it was set to None
             try:
                 engine_url = engine_url_template.format(port=node['id'])
-                node["engine"] = sa.create_engine(engine_url, echo=False, pool_pre_ping=True)
+                node["engine"] = sa.create_engine(engine_url, echo=False, connect_args=connect_args, pool_pre_ping=True)
                 node["online"] = True  # Assume the node is online
             except Exception as e:
                 node["online"] = False
@@ -88,6 +89,7 @@ def ping_node(node_id):
 
 # Updates the status of each node
 def update_node_status():
+    print(nodes)
     for node in nodes:
         if not node["online"]:  # Attempt to reconnect if the node is offline
             init_engines()
