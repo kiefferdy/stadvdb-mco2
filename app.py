@@ -27,12 +27,15 @@ app.secret_key = 'MqWHf-e4QGyS7_xq4BiA9Qbs-0F4ADEH'
 def init_engines():
     engine_url_template = f"mysql+pymysql://{USERNAME}:{PASSWORD}@{HOST}:{{port}}/{SCHEMA}"
     for node in nodes:
-        try:
-            engine_url = engine_url_template.format(port=node['id'])
-            node["engine"] = sa.create_engine(engine_url, echo=False, pool_pre_ping=True)
-        except Exception as e:
-            node["online"] = False
-            print(f"Warning: Offline note detected. Failed to connect to database on node {node['id']}: {e}")
+        if not node["engine"]:  # Initialize engine if it doesn't exist or reinitialize if it was set to None
+            try:
+                engine_url = engine_url_template.format(port=node['id'])
+                node["engine"] = sa.create_engine(engine_url, echo=False, pool_pre_ping=True)
+                node["online"] = True  # Assume the node is online
+            except Exception as e:
+                node["online"] = False
+                node["engine"] = None  # Ensure engine is None if connection fails
+                print(f"Warning: Failed to connect to database node {node['id']}: {e}")
 
 init_engines()
 
@@ -73,21 +76,23 @@ def get_random_online_node():
 
 # Checks whether the specified node is online
 def ping_node(node_id):
-    for node in nodes:
-        if node['id'] == node_id:
-            try:
-                with node["engine"].connect() as conn:
-                    return True
-            except Exception as e:
-                node["online"] = False
-                print(f"Node {node_id} is offline: {e}")
-                return False
-    return False
+    node = next((n for n in nodes if n['id'] == node_id), None)
+    try:
+        with node["engine"].connect() as conn:
+            return True
+    except Exception as e:
+        node["online"] = False
+        node["engine"] = None  # Reset engine to None to trigger reinitialization if it comes back online
+        print(f"Node {node_id} is offline: {e}")
+        return False
 
 # Updates the status of each node
 def update_node_status():
     for node in nodes:
-        node["online"] = ping_node(node["id"])
+        if not node["online"]:  # Attempt to reconnect if the node is offline
+            init_engines()
+        else:
+            node["online"] = ping_node(node["id"])
 
 # Handles deadlocks by retrying
 def execute_write_with_retry(engine, stmt, params, max_attempts=3):
