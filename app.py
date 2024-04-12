@@ -3,6 +3,7 @@ from datetime import datetime
 import sqlalchemy as sa
 import pandas as pd
 import random
+import time
 
 # MySQL Database Config
 HOST = "ccscloud.dlsu.edu.ph"
@@ -88,6 +89,25 @@ def update_node_status():
     for node in nodes:
         node["online"] = ping_node(node["id"])
 
+# Handles deadlocks by retrying
+def execute_write_with_retry(engine, stmt, params, max_attempts=3):
+    for attempt in range(max_attempts):
+        try:
+            with engine.begin() as conn:
+                conn.execute(stmt, params)
+            break
+        except sa.exc.OperationalError as e:
+            if 'Deadlock found' in str(e):
+                wait = 0.5 * (2 ** attempt)  # Exponential backoff
+                print(f"Warning: Deadlock detected for query \"{stmt}\". Retrying after {wait} seconds...")
+                time.sleep(wait)
+            else:
+                print(f"Operational error not related to deadlock: {e}")
+                raise  # Rethrow exceptions not related to deadlocks
+    else:
+        print(f"Error: Failed to execute statement \"{stmt}\" after {max_attempts} attempts due to deadlock.")
+        raise Exception("Error: Transaction failed due to repeated deadlocks.")
+
 @app.route('/')
 def home():
     selected_node = session.get('selected_node', 20171)
@@ -165,25 +185,22 @@ def create_appointment():
     if not engine:
         return jsonify({"error": "All database nodes are currently offline."}), 503
 
+    stmt = sa.text(f"INSERT INTO {TABLE} (apptid, doctorid, pxid, clinicid, StartTime, EndTime, type, status, `Virtual`) VALUES (:apptid, :doctorid, :pxid, :clinicid, :start_time, :end_time, :type, :status, :virtual)")
+    params = {
+        'apptid': request.form['apptid'],
+        'doctorid': request.form['doctor'],
+        'pxid': request.form['patient'],
+        'clinicid': request.form['clinic'],
+        'start_time': request.form['start_time'],
+        'end_time': request.form['end_time'],
+        'type': request.form['type'],
+        'status': request.form['status'],
+        'virtual': 1 if 'virtual' in request.form else 0
+    }
+
     try:
-        # Insert the new appointment into the database
-        stmt = sa.text(f"INSERT INTO {TABLE} (apptid, doctorid, pxid, clinicid, StartTime, EndTime, type, `Virtual`) VALUES (:apptid, :doctorid, :pxid, :clinicid, :start_time, :end_time, :type, :virtual)")
-
-        with engine.begin() as conn:
-            conn.execute(stmt, {
-                'apptid': request.form['apptid'],
-                'doctorid': request.form['doctor'],
-                'pxid': request.form['patient'],
-                'clinicid': request.form['clinic'],
-                'start_time': request.form['start_time'],
-                'end_time': request.form['end_time'],
-                'type': request.form['type'],
-                'status': request.form['status'],
-                'virtual': 1 if 'virtual' in request.form else 0
-            })
-
-        return redirect('/appointments')
-
+        execute_write_with_retry(engine, stmt, params)
+        return redirect(request.referrer)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
@@ -235,25 +252,22 @@ def update_appointment(apptid):
     if not engine:
         return jsonify({"error": "All database nodes are currently offline."}), 503
 
+    stmt = sa.text(f"UPDATE {TABLE} SET doctorid = :doctorid, pxid = :pxid, clinicid = :clinicid, StartTime = :start_time, EndTime = :end_time, type = :type, status = :status, `Virtual` = :virtual WHERE apptid = :apptid")
+    params = {
+        'apptid': apptid,
+        'doctorid': request.form['doctor'],
+        'pxid': request.form['patient'],
+        'clinicid': request.form['clinic'],
+        'start_time': request.form['start_time'],
+        'end_time': request.form['end_time'],
+        'type': request.form['type'],
+        'status': request.form['status'],
+        'virtual': 1 if 'virtual' in request.form else 0
+    }
+
     try:
-        # Update the appointment in the database
-        stmt = sa.text(f"UPDATE {TABLE} SET doctorid = :doctorid, pxid = :pxid, clinicid = :clinicid, StartTime = :start_time, EndTime = :end_time, type = :type, `Virtual` = :virtual WHERE apptid = :apptid")
-
-        with engine.begin() as conn:
-            conn.execute(stmt, {
-                'apptid': apptid,
-                'doctorid': request.form['doctor'],
-                'pxid': request.form['patient'],
-                'clinicid': request.form['clinic'],
-                'start_time': request.form['start_time'],
-                'end_time': request.form['end_time'],
-                'type': request.form['type'],
-                'status': request.form['status'],
-                'virtual': 1 if 'virtual' in request.form else 0
-            })
-
-        return redirect('/appointments')
-
+        execute_write_with_retry(engine, stmt, params)
+        return redirect(request.referrer)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -263,15 +277,12 @@ def delete_appointment(apptid):
     if not engine:
         return jsonify({"error": "All database nodes are currently offline."}), 503
 
+    stmt = sa.text(f"DELETE FROM {TABLE} WHERE apptid = :apptid")
+    params = {'apptid': apptid}
+
     try:
-        # Delete the appointment from the database
-        stmt = sa.text(f"DELETE FROM {TABLE} WHERE apptid = :apptid")
-
-        with engine.begin() as conn:
-            conn.execute(stmt, {'apptid': apptid})
-
-        return redirect('/appointments')
-
+        execute_write_with_retry(engine, stmt, params)
+        return redirect(request.referrer)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
