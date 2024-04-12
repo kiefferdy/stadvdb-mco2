@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById(`status${key}`).style.backgroundColor = json[key] ? 'red' : 'lime';
                 }
             });
-    }, 1500);
+    }, 2000);
 });
 
 function editAppointment(apptid) {
